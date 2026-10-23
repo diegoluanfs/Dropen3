@@ -9,6 +9,7 @@ PYTHON_BIN="python3.12"
 INSTALL_SYSTEM=true
 RUN_TESTS=true
 RUN_DOCTOR=true
+ALLOW_DEADSnakes=false
 
 info() { printf '\n[INFO] %s\n' "$*"; }
 warn() { printf '\n[WARN] %s\n' "$*" >&2; }
@@ -20,13 +21,14 @@ Usage: bash packaging/setup_linux.sh [options]
 Options:
   --python PATH           Python 3.12 interpreter (default: python3.12)
   --no-system-packages    Do not install Linux system packages
+  --enable-deadsnakes     Allow adding the third-party Deadsnakes PPA on Ubuntu 22.04
   --skip-tests            Skip pytest execution
   --skip-doctor           Skip Dropen3 system doctor
   -h, --help              Show this help
 
 System packages may require sudo on Debian/Ubuntu. The script never installs
-Python from untrusted third-party repositories or changes the system's default
-Python interpreter. Run as a regular user, not with sudo.
+Python from third-party repositories without explicit approval or changes
+the system's default Python interpreter. Run as a regular user, not with sudo.
 USAGE
 }
 
@@ -34,6 +36,7 @@ while (($#)); do
   case "$1" in
     --python) (($# >= 2)) || die 'Missing argument for --python'; PYTHON_BIN="$2"; shift 2 ;;
     --no-system-packages) INSTALL_SYSTEM=false; shift ;;
+    --enable-deadsnakes) ALLOW_DEADSnakes=true; shift ;;
     --skip-tests) RUN_TESTS=false; shift ;;
     --skip-doctor) RUN_DOCTOR=false; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -51,15 +54,44 @@ if [[ -r /etc/os-release ]]; then
   info "System: ${PRETTY_NAME:-${ID:-Linux}} ($(uname -m))"
 fi
 
-# On Debian/Ubuntu, use only official configured repositories. Other
-# distributions must provide Python 3.12 through their own package manager.
+# Install the project-standard Python only if it is missing. Ubuntu 22.04
+# needs a separately approved third-party repository for Python 3.12.
+apt_available() {
+  local candidate
+  candidate="$(apt-cache policy "$1" 2>/dev/null | awk '/Candidate:/ {print $2; exit}')"
+  [[ -n "$candidate" && "$candidate" != "(none)" ]]
+}
+
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   if [[ "$PYTHON_BIN" == "python3.12" && "$INSTALL_SYSTEM" == true ]] && command -v apt-get >/dev/null 2>&1; then
+    command -v sudo >/dev/null 2>&1 || die 'sudo is unavailable. Install Python 3.12 manually.'
     info 'Python 3.12 missing; checking configured apt repositories'
-    command -v sudo >/dev/null 2>&1 || die 'sudo unavailable. Install Python 3.12 manually.'
     sudo apt-get update
-    if apt-cache show python3.12 >/dev/null 2>&1; then
-      sudo apt-get install -y python3.12
+    if ! apt_available python3.12 && [[ "${ID:-}" == "ubuntu" && "${VERSION_ID:-}" == "22.04" ]]; then
+      if [[ "$ALLOW_DEADSnakes" != true ]]; then
+        if [[ -t 0 ]]; then
+          printf '\nPython 3.12 is not available from the configured Ubuntu 22.04 repositories.\n' >&2
+          printf 'Deadsnakes is a third-party PPA, not an official Ubuntu repository.\n' >&2
+          printf 'Add ppa:deadsnakes/ppa to install Python 3.12? [y/N] ' >&2
+          read -r response
+          case "$response" in y|Y|yes|YES) ALLOW_DEADSnakes=true ;; esac
+        fi
+      fi
+      if [[ "$ALLOW_DEADSnakes" == true ]]; then
+        info 'Installing repository management utility and adding Deadsnakes PPA with approval'
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository -y ppa:deadsnakes/ppa
+        sudo apt-get update
+      else
+        die 'Python 3.12 is missing. Install it manually or rerun with --enable-deadsnakes to explicitly authorize the third-party PPA.'
+      fi
+    fi
+    if apt_available python3.12; then
+      info 'Installing Python 3.12 and matching venv/Tk packages'
+      packages=(python3.12)
+      apt_available python3.12-venv && packages+=(python3.12-venv)
+      apt_available python3.12-tk && packages+=(python3.12-tk)
+      sudo apt-get install -y "${packages[@]}"
     fi
   fi
 fi
@@ -73,10 +105,10 @@ if command -v apt-get >/dev/null 2>&1; then
   if ! (ldconfig -p 2>/dev/null || true) | grep -q 'libGL.so.1'; then PKGS+=(libgl1); fi
   if ! (ldconfig -p 2>/dev/null || true) | grep -q 'libglib-2.0.so.0'; then PKGS+=(libglib2.0-0); fi
   if ! "$PYTHON_BIN" -c 'import venv, ensurepip' >/dev/null 2>&1; then
-    if apt-cache show python3.12-venv >/dev/null 2>&1; then PKGS+=(python3.12-venv); fi
+    if apt_available python3.12-venv; then PKGS+=(python3.12-venv); fi
   fi
   if ! "$PYTHON_BIN" -c 'import tkinter' >/dev/null 2>&1; then
-    if apt-cache show python3.12-tk >/dev/null 2>&1; then PKGS+=(python3.12-tk); else PKGS+=(python3-tk); fi
+    if apt_available python3.12-tk; then PKGS+=(python3.12-tk); else PKGS+=(python3-tk); fi
   fi
   if ((${#PKGS[@]})); then
     if [[ "$INSTALL_SYSTEM" == true ]]; then
@@ -102,8 +134,9 @@ if [[ ! -d "$VENV_DIR" ]]; then
   info "Creating virtual environment at $VENV_DIR"
   "$PYTHON_BIN" -m venv "$VENV_DIR"
 else
-  info "Reusing existing virtual environment at $VENV_DIR"
-  "$VENV_DIR/bin/python" -c 'import sys; raise SystemExit(0 if sys.version_info[:2] == (3,12) else 1)' || die 'Existing .venv uses another Python version. Rename it manually and rerun.'
+  info "Checking existing virtual environment at $VENV_DIR"
+  "$VENV_DIR/bin/python" -c 'import sys; raise SystemExit(0 if sys.version_info[:2] == (3,12) else 1)' || die "Existing .venv has an incompatible Python version. Preserve it with: mv .venv .venv-backup-$(date +%Y%m%d%H%M%S) ; then rerun."
+  info "Reusing compatible virtual environment"
 fi
 
 VENV_PY="$VENV_DIR/bin/python"
@@ -111,6 +144,7 @@ info 'Installing Dropen3 and development test dependencies (editable mode)'
 "$VENV_PY" -m pip install --upgrade pip
 "$VENV_PY" -m pip install -e "$ROOT_DIR[test]"
 "$VENV_PY" -m pip check
+"$VENV_PY" -c 'import dropen3; print("Dropen3 module import: OK")' || die "Could not import dropen3 after installation."
 
 cd "$ROOT_DIR"
 if [[ "$RUN_TESTS" == true ]]; then
