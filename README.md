@@ -20,6 +20,10 @@ Dropen3 is an open-source graphical Python application for **static contact angl
 | Environment diagnostic | `src/dropen3/system/doctor.py` |
 | Doctor console and interactive exit handling | `src/dropen3/system/doctor_cli.py` |
 
+## Linux researchers and contributors
+
+For Linux installation, Tkinter/OpenCV system dependencies, Doctor commands, and platform caveats, see **[docs/LINUX.md](docs/LINUX.md)**. For GitHub invitations, feature branches, pull requests, and scientific review requirements, see **[CONTRIBUTING.md](CONTRIBUTING.md)**. The Linux workflow currently runs from Python source; the Windows `.exe` is not a Linux executable.
+
 ## Install for scientific development
 
 Windows PowerShell using Python **3.12**:

@@ -18,7 +18,7 @@ authors = [
 keywords = ["contact angle", "wettability", "droplet impact", "scientific imaging"]
 classifiers = [
  "Programming Language :: Python :: 3", "Operating System :: Microsoft :: Windows",
- "Topic :: Scientific/Engineering :: Physics", "Development Status :: 3 - Alpha",
+ "Operating System :: POSIX :: Linux", "Topic :: Scientific/Engineering :: Physics", "Development Status :: 3 - Alpha",
 ]
 dependencies = [
  "numpy>=1.26,<3", "opencv-python>=4.8,<5", "scipy>=1.12,<2",

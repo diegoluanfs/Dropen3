@@ -1,35 +1,21 @@
-# Virtual environments
 .venv/
 venv/
-env/
-
-# Python cache
 __pycache__/
 *.py[cod]
 *.egg-info/
-
-# PyInstaller artifacts
-build/
-dist/
-
-# Testing
 .pytest_cache/
 .coverage
 htmlcov/
-
-# IDE
+build/
+dist/
+.env
+.env.*
+!.env.example
+*.log
 .vscode/
 .idea/
-
-# Temporary files
-*.log
-*.tmp
-
-# Environment files
-.env
-.env.local
-
-# Local research data
+.DS_Store
+Thumbs.db
 data/raw/
 data/processed/
 results/
