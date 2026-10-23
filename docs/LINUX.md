@@ -30,7 +30,7 @@ For Fedora, start with `sudo dnf install git python3 python3-pip python3-tkinter
 In a terminal, choose a project directory and substitute the real repository URL:
 
 ```bash
-git clone https://github.com/ORGANIZATION/REPOSITORY.git
+git clone https://github.com/diegoluanfs/Dropen3.git
 cd REPOSITORY
 python3 --version
 python3 -m venv .venv
