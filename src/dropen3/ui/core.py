@@ -4,7 +4,6 @@ import customtkinter as ctk
 from tkinter import ttk
 from PIL import Image
 from importlib.resources import files
-from dropen3.system.gui import show_doctor
 from dropen3.ui.widgets import Tooltip
 
 
@@ -75,7 +74,6 @@ class ApplicationCore:
         self.menu_container = ctk.CTkFrame(self.sidebar, fg_color='transparent')
         self.menu_container.pack(fill='x', padx=10)
         self.create_main_menu()
-        ctk.CTkButton(self.sidebar, text="System Doctor", command=lambda: show_doctor(self)).pack(fill="x", padx=12, pady=(14, 8))
         self.view_container = ctk.CTkFrame(self.main_layout, corner_radius=15)
         self.view_container.pack(side='right', fill='both', expand=True, padx=20, pady=10)
         self.top_toolbar = ctk.CTkFrame(self.view_container, height=40, fg_color='#222', corner_radius=10)
@@ -155,8 +153,6 @@ class ApplicationCore:
         self.btn_zoom_out.grid(row=0, column=9, padx=2)
         self.btn_toggle_zoom = ctk.CTkButton(self.btns_wrapper, text='🔍 Hover: OFF', width=100, height=20, fg_color='#444444', command=self.toggle_zoom_hover)
         self.btn_toggle_zoom.grid(row=0, column=10, padx=5)
-        self.btn_reset_zoom = ctk.CTkButton(self.btns_wrapper, text='Fit', width=45, command=self.reset_zoom)
-        self.btn_reset_zoom.grid(row=0, column=11, padx=4)
         self.video_slider_var = tk.DoubleVar(value=0)
         self.video_slider = ctk.CTkSlider(self.btns_wrapper, from_=0, to=100, variable=self.video_slider_var, command=self.on_slider_move)
         self.video_slider.grid(row=1, column=0, columnspan=11, sticky='ew', pady=(5, 5), padx=2)
