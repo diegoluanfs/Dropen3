@@ -17,3 +17,15 @@ jobs:
       - run: python -m pip install -e '.[test]'
       - run: python -m compileall -q src
       - run: python -m pytest -q
+
+      - name: Scientific core coverage gate
+        run: >-
+          python -m pytest -q
+          tests/test_combined_science.py
+          tests/test_combined_processing.py
+          tests/test_combined_plots_export.py
+          --cov=dropen3.science.combined
+          --cov=dropen3.analysis.combined_core
+          --cov=dropen3.analysis.combined_plotting
+          --cov-report=term-missing
+          --cov-fail-under=90

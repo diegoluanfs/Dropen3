@@ -1,6 +1,6 @@
 # Dropen3 on Linux
 
-This guide describes a **source installation** of Dropen3 1.1.0.dev5. It is not a prebuilt Linux release. The graphical interface and OpenCV point-selection windows require a working desktop display.
+This guide describes a **source installation** of Dropen3 1.2.0.dev0. It is not a prebuilt Linux release. The graphical interface and OpenCV point-selection windows require a working desktop display.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ For Fedora, start with `sudo dnf install git python3 python3-pip python3-tkinter
 In a terminal, choose a project directory and substitute the real repository URL:
 
 ```bash
-git clone https://github.com/diegoluanfs/Dropen3.git
+git clone https://github.com/ORGANIZATION/REPOSITORY.git
 cd REPOSITORY
 python3 --version
 python3 -m venv .venv

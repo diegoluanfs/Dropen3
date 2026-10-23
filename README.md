@@ -37,7 +37,7 @@ python -m dropen3 doctor
 python -m dropen3 gui
 ```
 
-When using the source command, add `--pause` to wait for Enter in an interactive terminal. The system doctor does not need a graphical display to print most checks; `python -m dropen3 doctor --json --output report.json` writes a machine-readable report. The regular GUI also has a **System Doctor** button. Diagnosis checks the Python runtime (or bundled runtime), packages, Tk, temporary disk space, packaged logo, OpenCV and basic image decoding. It reports video backend support but **cannot guarantee every research camera codec** will decode. Test an actual source video.
+When using the source command, add `--pause` to wait for Enter in an interactive terminal. The system doctor does not need a graphical display to print most checks; `python -m dropen3 doctor --json --output report.json` writes a machine-readable report. The System Doctor is a separate command-line and distributable executable, not a main-window button. Diagnosis checks the Python runtime (or bundled runtime), packages, Tk, temporary disk space, packaged logo, OpenCV and basic image decoding. It reports video backend support but **cannot guarantee every research camera codec** will decode. Test an actual source video.
 
 ## Deliver the Windows executable
 
@@ -63,7 +63,7 @@ The main viewer supports **A / Left Arrow** (previous frame) and **D / Right Arr
 track the original video frame index. Frame selection shortcuts do not operate
 while typing in text inputs.
 
-Mouse-wheel zoom, drag-to-zoom and the **Fit** button operate on the displayed
+Mouse-wheel zoom and drag-to-zoom operate on the displayed
 image region while retaining the original image coordinates. The optional
 magnifier also uses this mapping. Dragging in the main viewer is *view zoom*;
 it does not replace the analytical ROI and baseline dialogs.
@@ -127,7 +127,7 @@ From the root of the extracted project, run:
 ```
 
 Import a video and zoom in repeatedly, then out repeatedly; verify full-frame
-recovery, use Fit, and navigate frames. Repeat with zoom anchored near image
+recovery, and navigate frames. Repeat with zoom anchored near image
 edges. Desktop and experimental-video validation remains necessary.
 
 ## Continuous zoom-out below fitted size (1.1.0.dev4)
@@ -140,8 +140,8 @@ full-frame fitted view. The main viewer now has two independent controls:
   zoomed out below the fitted size.
 
 `-` decreases the preview size even from the initial fitted view. `+` reverses
-that reduction, restores the fitted size, and then magnifies the image. `Fit`
-restores the whole frame at its standard fitted size. Mouse-wheel zoom uses the
+that reduction, restores the fitted size, and then magnifies the image. An internal reset-to-fit operation
+restores the whole frame at its standard fitted size (the Fit button was removed from the main UI). Mouse-wheel zoom uses the
 same routine. Source images, annotation coordinates, and A/D or arrow-key frame
 navigation remain unchanged.
 
@@ -156,7 +156,7 @@ A 2 x 2-pixel image crop could previously become stuck: 2 pixels divided by
 (1 / 1.2) rounded back to 2, so Zoom Out never increased the viewing area.
 Zoom-in now stops at a maximum **32x relative to the original image** for
 normal frames. Zoom-out always expands the original-image crop by at least one
-pixel in each axis until the fitted view is reached. Zoom-out below Fit remains
+pixel in each axis until the fitted view is reached. Zoom-out below fitted size remains
 available down to 25% of fitted display size.
 
 The same correction applies to the OpenCV point-selection windows, which share
@@ -164,3 +164,50 @@ the crop function. Neither scientific source data nor pixel annotations are
 resampled or modified by the zoom controls. The A/D and arrow-key navigation
 was not changed. See `tests/test_zoom_maximum_regression.py` for the boundary
 and recovery test cases. Windows GUI acceptance testing remains necessary.
+
+
+## Combined spray and impact research preview (1.2.0.dev0)
+
+A new optional **Combined Spray and Impact** workflow appears in the sidebar.
+It does not replace the existing legacy spray-only or impact methods. It enables
+background-frame selection, two-point substrate baseline selection, a unified
+processing pass, secondary-object image tracking, descriptive spray-envelope
+measurements, primary-droplet geometry, and source-frame-indexed output.
+
+The **Data Table** contains 16 named measurements per frame. **Save Data**
+produces a tabular CSV/XLSX/TXT export alongside:
+
+- `<stem>.secondary_observations.csv`: individual contour measurements, frame indexes, and image track IDs
+- `<stem>.impact_summary.json`: calibration settings, measurement assumptions, warnings and dimensionless metrics
+- `<stem>.metadata.json`: general file provenance (where writable)
+
+A **track ID is not proof of a unique physical droplet**; a per-frame object
+count is not a cumulative creation count. The spray envelope is a descriptive
+side-view quantity and must not be reported as a physically calibrated cone angle.
+Missing or unresolvable measurements are represented as missing values, not
+substituted defaults. The software currently requires independent laboratory
+validation before use for quantitative research claims.
+
+### Automated verification
+
+Run the full existing and new test suite after installing the `test` extra:
+
+```bash
+python -m pytest -q
+```
+
+The scientific combined-analysis implementation has a dedicated coverage gate:
+
+```bash
+python -m pytest -q tests/test_combined_science.py tests/test_combined_processing.py \
+  tests/test_combined_plots_export.py \
+  --cov=dropen3.science.combined --cov=dropen3.analysis.combined_core \
+  --cov=dropen3.analysis.combined_plotting --cov-report=term-missing \
+  --cov-fail-under=90
+```
+
+Use the same pytest arguments in one line in PowerShell, without the shell
+backslashes. The measured coverage belongs **only to those three new modules**;
+it is not an application-wide coverage claim. See
+[docs/COMBINED_IMPLEMENTATION.md](docs/COMBINED_IMPLEMENTATION.md) for method
+semantics, migration status, acceptance tests and open release blockers.

@@ -68,14 +68,14 @@ class VideoToolsMixin:
             if not output_file:
                 return
             config_win.destroy()
-            fps_gravacao = 10000.0
+            acquisition_fps = 10000.0
             source_fps = 30.0
             frames_para_extrair = []
             actual_times_ms = []
             for t_ms in times_alvo_ms:
-                source_frame_offset = int(round(t_ms / 1000.0 * fps_gravacao))
+                source_frame_offset = int(round(t_ms / 1000.0 * acquisition_fps))
                 source_frame_index = initial_contact_frame + source_frame_offset
-                t_real = (source_frame_index - initial_contact_frame) / fps_gravacao * 1000.0
+                t_real = (source_frame_index - initial_contact_frame) / acquisition_fps * 1000.0
                 frames_para_extrair.append(source_frame_index)
                 actual_times_ms.append(t_real)
             cap = cv2.VideoCapture(self.video_path)
@@ -179,15 +179,15 @@ class VideoToolsMixin:
             if not output_file:
                 return
             config_win.destroy()
-            fps_gravacao = getattr(self, 'fps', 10000.0)
+            acquisition_fps = getattr(self, 'fps', 10000.0)
             if hasattr(self, 'params') and 'fps_real' in self.params:
-                fps_gravacao = float(self.params['fps_real'])
+                acquisition_fps = float(self.params['fps_real'])
             frames_para_extrair = []
             actual_times_ms = []
             for t_ms in times_alvo_ms:
-                offset_frames = int(round(t_ms / 1000.0 * fps_gravacao))
+                offset_frames = int(round(t_ms / 1000.0 * acquisition_fps))
                 idx_frame = initial_contact_frame + offset_frames
-                t_real = (idx_frame - initial_contact_frame) / fps_gravacao * 1000.0
+                t_real = (idx_frame - initial_contact_frame) / acquisition_fps * 1000.0
                 frames_para_extrair.append(idx_frame)
                 actual_times_ms.append(t_real)
             cap = cv2.VideoCapture(self.video_path)

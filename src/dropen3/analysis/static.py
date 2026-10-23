@@ -225,8 +225,8 @@ class StaticAnalysisMixin:
         for c in contours:
             points = c.reshape(-1, 2)
             if len(points) > 50:
-                largura = np.max(points[:, 0]) - np.min(points[:, 0])
-                contours_valid.append((largura, points))
+                width = np.max(points[:, 0]) - np.min(points[:, 0])
+                contours_valid.append((width, points))
         if not contours_valid:
             return
         contour = max(contours_valid, key=lambda item: item[0])[1]

@@ -23,13 +23,19 @@ class ExportMixin:
                 messagebox.showerror('Error', f'Failed to save image: {e}')
 
     def show_data_table(self):
+        if getattr(self, 'current_mode', '') == 'SPRAY_IMPACT':
+            self.canvas_view.pack_forget()
+            self.table_container.pack(fill='both', expand=True)
+            self._configure_combined_columns(clear=False)
+            self.lbl_status.configure(text='Combined Spray and Impact Data Table')
+            return
         self.canvas_view.pack_forget()
         self.table_container.pack(fill='both', expand=True)
         headers = {'WCA': ['Frame', 'Left Angle (°)', 'Right Angle (°)', 'Mean (°)'], 'HIS': ['Frame', 'Time (s)', 'Diameter (px)', 'Base Diameter (px)', 'Left Advance (px)', 'Right Advance (px)', 'Left Angle (°)', 'Right Angle (°)', 'Hysteresis (°)', 'Projected Base Area (px²)'], 'DROP': ['Time (s)', 'Position (mm)', 'Diameter (mm)', 'Beta', 'Height (mm)', 'Projected Area (mm²)', 'dD/dt (mm/s)'], 'DROP_SPRAY': ['Frame', 'Time (s)', 'Droplet Count', 'Mean Diameter (px)', 'Cone Angle (°)']}
-        mode_tabela = self.current_mode
-        if mode_tabela == 'DROP' and getattr(self, 'last_method_selected', None) == 'DROP_SPRAY':
-            mode_tabela = 'DROP_SPRAY'
-        cols = headers.get(mode_tabela, ['Data'])
+        table_mode = self.current_mode
+        if table_mode == 'DROP' and getattr(self, 'last_method_selected', None) == 'DROP_SPRAY':
+            table_mode = 'DROP_SPRAY'
+        cols = headers.get(table_mode, ['Data'])
         self.tree['columns'] = cols
         for col in cols:
             self.tree.heading(col, text=col)
@@ -59,6 +65,8 @@ class ExportMixin:
                 if not path_lower.endswith('.csv'):
                     file_path += '.csv'
                 df.to_csv(file_path, index=False, sep=';', encoding='utf-8-sig')
+            if getattr(self, 'current_mode', '') == 'SPRAY_IMPACT':
+                self.save_combined_observations(file_path)
             try:
                 sidecar = write_export_provenance(file_path, self, columns=list(df.columns), rows=len(df))
             except (OSError, TypeError, ValueError) as metadata_error:
@@ -74,6 +82,22 @@ class ExportMixin:
         self.option_win.geometry('300x600')
         self.option_win.attributes('-topmost', True)
         ctk.CTkLabel(self.option_win, text='Select Chart Type', font=('Roboto', 16, 'bold')).pack(pady=10)
+        if self.current_mode == 'SPRAY_IMPACT':
+            for code, label in (
+                ('COMBINED_WIDTH', 'Contact Width vs Time'),
+                ('COMBINED_BETA', 'Spreading Factor vs Time'),
+                ('COMBINED_BETA_WIDTH', 'Spreading Factor vs Contact Width'),
+                ('COMBINED_EXPANSION', 'Expansion-Only Spreading'),
+                ('COMBINED_BETA_FIT', 'Quadratic Spreading Trend'),
+                ('COMBINED_COMPLETE', 'Complete Spreading and Recoil'),
+                ('COMBINED_HEIGHT_WIDTH', 'Height vs Contact Width'),
+                ('COMBINED_ANGLE', '2D Spray Envelope Angle vs Time'),
+                ('COMBINED_SIZES', 'Secondary Droplet Size Distribution'),
+                ('COMBINED_COUNTS', 'Visible Droplets and Cumulative Track IDs'),
+            ):
+                ctk.CTkButton(self.option_win, text=label,
+                              command=lambda key=code: self.plot_graph(key)).pack(pady=4, padx=16, fill='x')
+            return
         if self.current_mode == 'WCA':
             ctk.CTkButton(self.option_win, text='Angles vs sample', command=lambda: self.plot_graph('WCA_EVO')).pack(pady=5, padx=20, fill='x')
             ctk.CTkButton(self.option_win, text='Distribution (Histogram)', command=lambda: self.plot_graph('WCA_HIST')).pack(pady=5, padx=20, fill='x')

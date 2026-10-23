@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dropen3"
-version = "1.1.0.dev5"
+version = "1.2.0.dev0"
 description = "Open-source scientific software for contact angle and droplet impact analysis"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=8,<10"]
+test = ["pytest>=8,<10", "pytest-cov>=5,<8"]
 build = ["pyinstaller>=6,<7"]
 
 [project.scripts]

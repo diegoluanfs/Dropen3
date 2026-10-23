@@ -47,6 +47,8 @@ def export_provenance(app, *, data_columns=None, number_of_rows=None) -> dict[st
               'min_points_fit', 'n_tangent_points_val', 'points_baseline',
               'limit_y_baseline', 'm_baseline', 'c_baseline']
     settings = {key: _safe(getattr(app, key)) for key in fields if hasattr(app, key)}
+    combined = getattr(app, 'combined_session', None)
+    combined_summary = getattr(app, 'combined_summary', None)
     return {
         'schema_version': 1,
         'application': 'Dropen3',
@@ -59,6 +61,13 @@ def export_provenance(app, *, data_columns=None, number_of_rows=None) -> dict[st
         'data_columns': _safe(data_columns),
         'row_count': number_of_rows,
         'input_media': video_source,
+        'combined_analysis': (
+            {'reference_frame_index': combined.reference_frame_index,
+             'first_contact_frame': combined.first_contact_frame,
+             'selected_baseline_frame': getattr(app, 'combined_selected_baseline_frame', None),
+             'impact_summary_available': combined_summary is not None}
+            if combined is not None else None
+        ),
         'research_validation_status': 'NOT_QUANTITATIVELY_VALIDATED',
         'limitations': [
             'Frame timestamps and spatial calibration require external verification',

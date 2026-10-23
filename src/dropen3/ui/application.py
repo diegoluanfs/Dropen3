@@ -8,6 +8,7 @@ from dropen3.analysis.hysteresis import HysteresisAnalysisMixin
 from dropen3.analysis.impact import ImpactAnalysisMixin
 from dropen3.analysis.plotting import PlottingMixin
 from dropen3.analysis.spray import SprayAnalysisMixin
+from dropen3.analysis.combined import CombinedAnalysisMixin
 from dropen3.analysis.static import StaticAnalysisMixin
 from dropen3.analysis.video_tools import VideoToolsMixin
 from dropen3.ui.core import ApplicationCore
@@ -19,6 +20,6 @@ from dropen3.ui.viewer import ViewerMixin
 
 class Dropen3App(ApplicationCore, HomeMixin, SettingsMixin, ViewerMixin,
                  ExportMixin, StaticAnalysisMixin, HysteresisAnalysisMixin,
-                 ImpactAnalysisMixin, SprayAnalysisMixin, PlottingMixin,
+                 ImpactAnalysisMixin, SprayAnalysisMixin, CombinedAnalysisMixin, PlottingMixin,
                  VideoToolsMixin, ctk.CTk):
     """Dropen3 analysis application with separated scientific workflows."""

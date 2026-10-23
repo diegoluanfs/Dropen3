@@ -9,6 +9,19 @@ from scipy.signal import savgol_filter
 class PlottingMixin:
 
     def plot_graph(self, type):
+        if type.startswith('COMBINED_'):
+            from dropen3.analysis.combined_plotting import draw_combined_plot
+            session = getattr(self, 'combined_session', None)
+            if session is None:
+                messagebox.showwarning('No measurements', 'Run combined analysis before plotting.')
+                return
+            try:
+                figure = draw_combined_plot(session, type)
+            except ValueError as error:
+                messagebox.showwarning('Unavailable measurement', str(error))
+                return
+            figure.show()
+            return
         data = []
         for item in self.tree.get_children():
             data.append(self.tree.item(item)['values'])
